@@ -1,14 +1,27 @@
+# =========================
+# Base (común a todos los perfiles)
+# =========================
 server:
   port: 8080
 
 spring:
   application:
     name: farmatodo-ecommerce
-
   jackson:
     default-property-inclusion: non_null
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate         # valida contra Flyway en todos los perfiles (puedes relajar en dev si aún no tienes DDL)
+  # Evita inicializaciones automáticas que choquen con Flyway
+  sql:
+    init:
+      mode: never
 
-# Documentación API
+# Swagger / OpenAPI
 springdoc:
   api-docs:
     enabled: true
@@ -18,16 +31,59 @@ springdoc:
     path: /swagger-ui.html
     display-request-duration: true
 
-# Seguridad API Key
+# Actuator (útil en demo)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Seguridad (API Key)
 security:
   apiKeyHeader: X-API-KEY
-  apiKey: ${SECURITY_API_KEY:changeme-dev}
+  apiKey: ${SECURITY_API_KEY:changeme-dev}   # override por env en prod (abajo se vuelve requerido)
 
-# Logging
+# CorrelationId (para logs y trazas)
+correlation:
+  header: X-Correlation-Id
+
+# Parámetros de negocio
+tokenization:
+  rejectionProbability: ${TOKENIZATION_REJECTION_PROBABILITY:0.2}   # 20% por defecto
+
+search:
+  minStock: ${SEARCH_MIN_STOCK:1}
+
+payments:
+  approvalProbability: ${PAYMENTS_APPROVAL_PROBABILITY:0.8}         # 80% por defecto
+  retry:
+    maxAttempts: ${PAYMENTS_RETRY_MAX_ATTEMPTS:3}
+    initialMs: ${PAYMENTS_RETRY_INITIAL_MS:500}
+    multiplier: ${PAYMENTS_RETRY_MULTIPLIER:2.0}
+
+# Cifrado (AES/GCM) - clave Base64 y versionado
+crypto:
+  keyB64: ${CRYPTO_KEY_B64:3+mnC2QW7DqfA0tq1xD8F2zKpOb/Jts8FQqMoJc2rT0=}
+  keyVersion: ${CRYPTO_KEY_VERSION:1}
+
+# Logging base
 logging:
   level:
     root: INFO
     com.farmatodo: DEBUG
+  # Si usas logback-spring.xml con MDC, esto ayuda a ver el correlationId (opcional)
+  pattern:
+    console: "%d{ISO8601} %-5level [%X{correlationId}] %logger - %msg%n"
+
+# Async (opcional, si quieres afinar el pool de @Async)
+app:
+  async:
+    corePoolSize: ${ASYNC_CORE_POOL_SIZE:4}
+    maxPoolSize: ${ASYNC_MAX_POOL_SIZE:8}
+    queueCapacity: ${ASYNC_QUEUE_CAPACITY:100}
 
 # =========================
 # Perfil DEV
@@ -44,7 +100,7 @@ spring:
     password: sa
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
@@ -52,6 +108,21 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  mail:
+    host: ${MAIL_HOST:mailhog}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+# Clave de cifrado (DEV)
+crypto:
+  keyB64: ${CRYPTO_KEY_B64:3+mnC2QW7DqfA0tq1xD8F2zKpOb/Jts8FQqMoJc2rT0=}
+  keyVersion: ${CRYPTO_KEY_VERSION:1}
+
 logging:
   level:
     com.farmatodo: DEBUG
@@ -75,6 +146,21 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+  mail:
+    host: ${MAIL_HOST:mailhog}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+# Clave de cifrado (QA)
+crypto:
+  keyB64: ${CRYPTO_KEY_B64:3+mnC2QW7DqfA0tq1xD8F2zKpOb/Jts8FQqMoJc2rT0=}
+  keyVersion: ${CRYPTO_KEY_VERSION:1}
+
 logging:
   level:
     com.farmatodo: INFO
@@ -103,9 +189,13 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-# Seguridad: API Key obligatoria en prod
+# En PROD obligamos env vars (sin defaults)
 security:
-  apiKey: ${SECURITY_API_KEY}
+  apiKey: ${SECURITY_API_KEY}          # requerido
+crypto:
+  keyB64: ${CRYPTO_KEY_B64}            # requerido
+  keyVersion: ${CRYPTO_KEY_VERSION:1}
+
 logging:
   level:
     root: INFO

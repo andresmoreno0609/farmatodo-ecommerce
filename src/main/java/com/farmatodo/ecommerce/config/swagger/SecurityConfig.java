@@ -26,10 +26,13 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())    // desactiva basic auth
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/ping",
+                        .requestMatchers(
+                                "/ping",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html").permitAll()
+                                "/swagger-ui.html",
+                                "/h2-console/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new ApiKeyFilter(apiKeyHeader, apiKey),

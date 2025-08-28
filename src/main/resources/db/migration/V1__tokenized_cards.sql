@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS tokenized_cards (
+  id BIGSERIAL PRIMARY KEY,
+  token VARCHAR(64) NOT NULL UNIQUE,
+  last4 VARCHAR(8)  NOT NULL,
+  brand VARCHAR(20) NOT NULL,
+  encrypted_payload TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

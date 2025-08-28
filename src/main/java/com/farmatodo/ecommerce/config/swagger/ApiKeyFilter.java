@@ -34,7 +34,8 @@ public class ApiKeyFilter extends OncePerRequestFilter {
         return m.match("/ping", p)
                 || m.match("/v3/api-docs/**", p)
                 || m.match("/swagger-ui/**", p)
-                || m.match("/swagger-ui.html", p);
+                || m.match("/swagger-ui.html", p)
+                || m.match("/h2-console/**", p);
     }
 
     @Override
