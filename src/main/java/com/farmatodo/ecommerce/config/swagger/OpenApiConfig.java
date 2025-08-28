@@ -15,7 +15,7 @@ public class OpenApiConfig {
     public GroupedOpenApi ecommerceApi() {
         return GroupedOpenApi.builder()
                 .group("ecommerce")
-                .packagesToScan("com.farmatodo.ecommerce") // muy importante
+                .packagesToScan("com.farmatodo.ecommerce")
                 .pathsToMatch("/**")
                 .pathsToExclude("/error")
                 .build();
@@ -30,8 +30,7 @@ public class OpenApiConfig {
                                 .in(SecurityScheme.In.HEADER)
                                 .name("X-API-KEY")
                 ))
-                // Hace que por defecto los endpoints pidan API Key;
-                // /ping no quedará afectado porque está fuera de seguridad por config de Spring Security.
+
                 .addSecurityItem(new SecurityRequirement().addList("apiKeyAuth"));
     }
 }

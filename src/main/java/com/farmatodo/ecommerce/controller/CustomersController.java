@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class CustomersController {
 
     @PostMapping
-    public ResponseEntity<Void> create() { return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build(); }
+    public ResponseEntity<Void> create() {return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();}
 
     @GetMapping("/{id}")
     public ResponseEntity<Void> get(@PathVariable Long id) { return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build(); }
