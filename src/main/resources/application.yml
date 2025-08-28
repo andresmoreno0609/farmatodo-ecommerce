@@ -1,0 +1,112 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: farmatodo-ecommerce
+
+  jackson:
+    default-property-inclusion: non_null
+
+# Documentación API
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    display-request-duration: true
+
+# Seguridad API Key
+security:
+  apiKeyHeader: X-API-KEY
+  apiKey: ${SECURITY_API_KEY:changeme-dev}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.farmatodo: DEBUG
+
+# =========================
+# Perfil DEV
+# =========================
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:ecommerce_dev;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+logging:
+  level:
+    com.farmatodo: DEBUG
+
+# =========================
+# Perfil QA
+# =========================
+---
+spring:
+  config:
+    activate:
+      on-profile: qa
+  datasource:
+    url: jdbc:h2:mem:ecommerce_qa;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+logging:
+  level:
+    com.farmatodo: INFO
+
+# =========================
+# Perfil PROD
+# =========================
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:ecommerce}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:app}
+    password: ${DB_PASSWORD:app}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Seguridad: API Key obligatoria en prod
+security:
+  apiKey: ${SECURITY_API_KEY}
+logging:
+  level:
+    root: INFO
+    com.farmatodo: INFO
