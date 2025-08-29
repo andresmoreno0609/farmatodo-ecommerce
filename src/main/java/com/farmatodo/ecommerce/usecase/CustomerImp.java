@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class CustomerUseCase {
+public class CustomerImp {
 
     private final CustomerRepository repository;
 
-    public CustomerUseCase(CustomerRepository repository) { this.repository = repository; }
+    public CustomerImp(CustomerRepository repository) { this.repository = repository; }
 
     @Transactional
     public CustomerEntity create(CustomerEntity e){

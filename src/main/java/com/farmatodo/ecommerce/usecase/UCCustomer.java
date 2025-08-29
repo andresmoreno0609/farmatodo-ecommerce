@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class UCCustomer implements CustomerAdapter {
 
-    private final CustomerUseCase useCase;
+    private final CustomerImp useCase;
 
-    public UCCustomer(CustomerUseCase useCase) {
+    public UCCustomer(CustomerImp useCase) {
         this.useCase = useCase;
     }
 
