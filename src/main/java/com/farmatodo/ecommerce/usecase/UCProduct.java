@@ -1,6 +1,6 @@
 package com.farmatodo.ecommerce.usecase;
 
-import com.farmatodo.ecommerce.config.trasversal.ProductSettings;
+import com.farmatodo.ecommerce.config.trasversal.SettingsConfig;
 import com.farmatodo.ecommerce.entity.ProductEntity;
 import com.farmatodo.ecommerce.enums.ERecordStatus;
 import com.farmatodo.ecommerce.exceptions.BusinessException;
@@ -18,9 +18,9 @@ public class UCProduct {
 
     private final ProductRepository repo;
     private final ProductSearchLogRepository searchLogRepo;
-    private final ProductSettings settings;
+    private final SettingsConfig settings;
 
-    public UCProduct(ProductRepository repo, ProductSearchLogRepository searchLogRepo, ProductSettings settings) {
+    public UCProduct(ProductRepository repo, ProductSearchLogRepository searchLogRepo, SettingsConfig settings) {
         this.repo = repo;
         this.searchLogRepo = searchLogRepo;
         this.settings = settings;
