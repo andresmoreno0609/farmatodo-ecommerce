@@ -15,8 +15,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate         # valida contra Flyway en todos los perfiles (puedes relajar en dev si aún no tienes DDL)
-  # Evita inicializaciones automáticas que choquen con Flyway
+      ddl-auto: validate         # valida contra Flyway
   sql:
     init:
       mode: never
@@ -31,7 +30,7 @@ springdoc:
     path: /swagger-ui.html
     display-request-duration: true
 
-# Actuator (útil en demo)
+# Actuator
 management:
   endpoints:
     web:
@@ -44,46 +43,68 @@ management:
 # Seguridad (API Key)
 security:
   apiKeyHeader: X-API-KEY
-  apiKey: ${SECURITY_API_KEY:changeme-dev}   # override por env en prod (abajo se vuelve requerido)
+  apiKey: ${SECURITY_API_KEY:changeme-dev}   # override en PROD
 
-# CorrelationId (para logs y trazas)
+# CorrelationId
 correlation:
   header: X-Correlation-Id
 
-# Parámetros de negocio
+# Tokenización
 tokenization:
-  rejectionProbability: ${TOKENIZATION_REJECTION_PROBABILITY:0.2}   # 20% por defecto
+  rejectionProbability: ${TOKENIZATION_REJECTION_PROBABILITY:0.2}
 
+# Búsqueda de productos
 search:
   minStock: ${SEARCH_MIN_STOCK:1}
 
+# Pagos
 payments:
-  approvalProbability: ${PAYMENTS_APPROVAL_PROBABILITY:0.8}         # 80% por defecto
+  approvalProbability: ${PAYMENTS_APPROVAL_PROBABILITY:0.8}
   retry:
     maxAttempts: ${PAYMENTS_RETRY_MAX_ATTEMPTS:3}
     initialMs: ${PAYMENTS_RETRY_INITIAL_MS:500}
     multiplier: ${PAYMENTS_RETRY_MULTIPLIER:2.0}
+    cadenceSeconds: ${PAYMENTS_RETRY_CADENCE_SECONDS:30}
 
-# Cifrado (AES/GCM) - clave Base64 y versionado
+# Notificaciones (correo del operador)
+notifications:
+  operatorEmail: ${OPERATOR_EMAIL:andresmoreno1991609@gmail.com}
+
+# Cifrado AES
 crypto:
   keyB64: ${CRYPTO_KEY_B64:3+mnC2QW7DqfA0tq1xD8F2zKpOb/Jts8FQqMoJc2rT0=}
   keyVersion: ${CRYPTO_KEY_VERSION:1}
 
-# Logging base
+# Correo (Mailhog por defecto; sobreescribir en prod)
+
+mail:
+  host: ${MAIL_HOST:localhost}
+  port: ${MAIL_PORT:1025}
+  username: ${MAIL_USER:}
+  password: ${MAIL_PASS:}
+  properties:
+    mail.smtp.auth: ${MAIL_AUTH:false}
+    mail.smtp.starttls.enable: ${MAIL_STARTTLS:false}
+
+# Logging
 logging:
   level:
     root: INFO
     com.farmatodo: DEBUG
-  # Si usas logback-spring.xml con MDC, esto ayuda a ver el correlationId (opcional)
   pattern:
     console: "%d{ISO8601} %-5level [%X{correlationId}] %logger - %msg%n"
 
-# Async (opcional, si quieres afinar el pool de @Async)
-app:
-  async:
-    corePoolSize: ${ASYNC_CORE_POOL_SIZE:4}
-    maxPoolSize: ${ASYNC_MAX_POOL_SIZE:8}
-    queueCapacity: ${ASYNC_QUEUE_CAPACITY:100}
+# Async/Scheduling
+
+task:
+  execution:
+    pool:
+      core-size: ${ASYNC_CORE_POOL_SIZE:4}
+      max-size: ${ASYNC_MAX_POOL_SIZE:8}
+      queue-capacity: ${ASYNC_QUEUE_CAPACITY:100}
+  scheduling:
+    pool:
+      size: ${SCHEDULER_POOL_SIZE:2}
 
 # =========================
 # Perfil DEV
@@ -99,11 +120,8 @@ spring:
     username: sa
     password: sa
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+      hibernate.dialect: org.hibernate.dialect.H2Dialect
   h2:
     console:
       enabled: true
@@ -112,16 +130,8 @@ spring:
     host: ${MAIL_HOST:mailhog}
     port: ${MAIL_PORT:1025}
     properties:
-      mail:
-        smtp:
-          auth: false
-          starttls:
-            enable: false
-
-# Clave de cifrado (DEV)
-crypto:
-  keyB64: ${CRYPTO_KEY_B64:3+mnC2QW7DqfA0tq1xD8F2zKpOb/Jts8FQqMoJc2rT0=}
-  keyVersion: ${CRYPTO_KEY_VERSION:1}
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
 
 logging:
   level:
@@ -141,25 +151,14 @@ spring:
     username: sa
     password: sa
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+      hibernate.dialect: org.hibernate.dialect.H2Dialect
   mail:
     host: ${MAIL_HOST:mailhog}
     port: ${MAIL_PORT:1025}
     properties:
-      mail:
-        smtp:
-          auth: false
-          starttls:
-            enable: false
-
-# Clave de cifrado (QA)
-crypto:
-  keyB64: ${CRYPTO_KEY_B64:3+mnC2QW7DqfA0tq1xD8F2zKpOb/Jts8FQqMoJc2rT0=}
-  keyVersion: ${CRYPTO_KEY_VERSION:1}
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
 
 logging:
   level:
@@ -183,18 +182,25 @@ spring:
       minimum-idle: 2
       connection-timeout: 30000
   jpa:
-    hibernate:
-      ddl-auto: validate
     properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USER}
+    password: ${MAIL_PASS}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
 
-# En PROD obligamos env vars (sin defaults)
+# En PROD obligamos env vars
 security:
-  apiKey: ${SECURITY_API_KEY}          # requerido
+  apiKey: ${SECURITY_API_KEY}
 crypto:
-  keyB64: ${CRYPTO_KEY_B64}            # requerido
+  keyB64: ${CRYPTO_KEY_B64}
   keyVersion: ${CRYPTO_KEY_VERSION:1}
+notifications:
+  operatorEmail: ${OPERATOR_EMAIL}
 
 logging:
   level:

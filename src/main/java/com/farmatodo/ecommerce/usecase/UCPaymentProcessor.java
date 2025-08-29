@@ -1,12 +1,10 @@
 package com.farmatodo.ecommerce.usecase;
 
 
-import com.farmatodo.ecommerce.config.trasversal.SettingsConfig;
+import com.farmatodo.ecommerce.config.propierties.PaymentsProperties;
 import com.farmatodo.ecommerce.entity.PaymentEntity;
 import com.farmatodo.ecommerce.enums.EPaymentStatus;
 import com.farmatodo.ecommerce.repository.PaymentRepository;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,19 +17,20 @@ public class UCPaymentProcessor {
 
     private final PaymentRepository paymentRepo;
     private final UCOrder ucOrder;
-    private final SettingsConfig settings;
-    private final JavaMailSender mailSender;
+    private final PaymentsProperties properties;
+    private final UCEmail emailService;
     private final Random rng = new Random();
 
-    public UCPaymentProcessor(PaymentRepository paymentRepo, UCOrder ucOrder, SettingsConfig settings, JavaMailSender mailSender){
-        this.paymentRepo = paymentRepo; this.ucOrder = ucOrder; this.settings = settings; this.mailSender = mailSender;
+    public UCPaymentProcessor(PaymentRepository paymentRepo, UCOrder ucOrder, PaymentsProperties properties, UCEmail emailService){
+        this.paymentRepo = paymentRepo; this.ucOrder = ucOrder; this.properties = properties;
+        this.emailService = emailService;
     }
 
     // corre cada X segundos, toma PENDING listos para reintento
     @Scheduled(fixedDelayString = "#{${settings.payment-retry-delay-seconds:30}*1000}")
     @Transactional
     public void tick(){
-        var before = OffsetDateTime.now().minusSeconds(settings.getPaymentRetryDelaySeconds());
+        var before = OffsetDateTime.now().minusSeconds(properties.getRetry().getCadenceSeconds());
         var pendings = paymentRepo.findByStatusAndLastTriedAtBefore(EPaymentStatus.PENDING, before);
         for (var p : pendings){
             attempt(p);
@@ -43,35 +42,27 @@ public class UCPaymentProcessor {
         p.setLastTriedAt(OffsetDateTime.now());
         p.setAttempts(p.getAttempts()+1);
 
-        boolean approved = rng.nextDouble() < settings.getPaymentApprovalProbability();
+        boolean approved = rng.nextDouble() < properties.getApprovalProbability();
         if (approved){
             p.setStatus(EPaymentStatus.APPROVED);
             p.setLastError(null);
             paymentRepo.save(p);
             ucOrder.markPaid(p.getOrder());
+
+            emailService.sendPaymentSuccess(p.getOrder());
             return;
         }
-        // Rechazado este intento
+
         p.setStatus(EPaymentStatus.PENDING);
         p.setLastError("gateway_declined");
         paymentRepo.save(p);
 
-        if (p.getAttempts() >= settings.getPaymentMaxRetries()){
-            // falló definitivamente
+        if (p.getAttempts() >= properties.getApprovalProbability()){
+
             p.setStatus(EPaymentStatus.FAILED);
             paymentRepo.save(p);
             ucOrder.markFailed(p.getOrder());
-            notifyCustomer(p);
+            emailService.sendPaymentFailed(p.getOrder(), p.getAttempts(), p.getLastError());
         }
-    }
-
-    private void notifyCustomer(PaymentEntity p){
-        // En un real, buscaríamos el email del cliente en Customers.
-        var to = "customer@mail.test";
-        var msg = new SimpleMailMessage();
-        msg.setTo(to);
-        msg.setSubject("Pago fallido para pedido #" + p.getOrder().getId());
-        msg.setText("No fue posible procesar tu pago tras " + p.getAttempts() + " intentos.");
-        mailSender.send(msg);
     }
 }

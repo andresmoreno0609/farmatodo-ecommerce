@@ -1,6 +1,6 @@
 package com.farmatodo.ecommerce.usecase;
 
-import com.farmatodo.ecommerce.config.trasversal.SettingsConfig;
+import com.farmatodo.ecommerce.config.propierties.SearchProperties;
 import com.farmatodo.ecommerce.entity.ProductEntity;
 import com.farmatodo.ecommerce.enums.ERecordStatus;
 import com.farmatodo.ecommerce.exceptions.BusinessException;
@@ -18,12 +18,12 @@ public class UCProduct {
 
     private final ProductRepository repo;
     private final ProductSearchLogRepository searchLogRepo;
-    private final SettingsConfig settings;
+    private final SearchProperties properties;
 
-    public UCProduct(ProductRepository repo, ProductSearchLogRepository searchLogRepo, SettingsConfig settings) {
+    public UCProduct(ProductRepository repo, ProductSearchLogRepository searchLogRepo, SearchProperties properties) {
         this.repo = repo;
         this.searchLogRepo = searchLogRepo;
-        this.settings = settings;
+        this.properties = properties;
     }
 
     @Transactional
@@ -59,7 +59,7 @@ public class UCProduct {
 
     @Transactional(readOnly = true)
     public Page<ProductEntity> search(String q, int page, int size){
-        int minStock = settings.getMinVisibleStock(); // configurable
+        int minStock = properties.getMinStock();// configurable
         var p = repo.searchByNameOrSku(q == null ? "" : q, minStock, PageRequest.of(page, size));
         logSearchAsync(q, minStock, p.getTotalElements());
         return p;
