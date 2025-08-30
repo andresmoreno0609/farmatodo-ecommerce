@@ -12,15 +12,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false) // evita filtros de seguridad en este test
-@Import(MailTestConfig.class)             // inyecta el stub del mail
+@AutoConfigureMockMvc(addFilters = false)
+@Import(MailTestConfig.class)
 class PingControllerTest {
-
-    @Autowired
-    MockMvc mvc;
+    @Autowired MockMvc mvc;
 
     @Test
-    void shouldReturnPong() throws Exception {
+    void returnsPong() throws Exception {
         mvc.perform(get("/ping"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("pong"));
