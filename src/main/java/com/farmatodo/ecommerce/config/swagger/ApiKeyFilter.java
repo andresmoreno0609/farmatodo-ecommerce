@@ -20,54 +20,41 @@ import java.util.Optional;
 public class ApiKeyFilter extends OncePerRequestFilter {
 
     private final String headerName;
-    private final String expectedValue;
-    private final AntPathMatcher m = new AntPathMatcher();
+    private final String expectedApiKey;
 
-    public ApiKeyFilter(String headerName, String expectedValue) {
+    private static final AntPathMatcher M = new AntPathMatcher();
+    private static final String[] WHITELIST = {
+            "/ping",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/actuator/health",
+            "/h2-console/**"
+    };
+
+    public ApiKeyFilter(String headerName, String expectedApiKey) {
         this.headerName = headerName;
-        this.expectedValue = expectedValue;
+        this.expectedApiKey = expectedApiKey;
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest req) {
-        String p = req.getServletPath();
-        return m.match("/ping", p)
-                || m.match("/v3/api-docs/**", p)
-                || m.match("/swagger-ui/**", p)
-                || m.match("/swagger-ui.html", p)
-                || m.match("/h2-console/**", p);
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        for (String p : WHITELIST) if (M.match(p, path)) return true;
+        return false;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest req,
+                                    HttpServletResponse res,
+                                    FilterChain chain)
+            throws ServletException, IOException {
 
-        String provided = Optional.ofNullable(request.getHeader(headerName)).orElse("").trim();
-        String expected = Optional.ofNullable(expectedValue).orElse("").trim();
-
-        log.info("API-KEY expected='{}' provided='{}' header='{}' path='{}'",
-                expected, provided, headerName, request.getServletPath());
-
-        if (expected.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().write("API Key not configured");
-            return;
+        String provided = req.getHeader(headerName);
+        if (expectedApiKey != null && !expectedApiKey.isBlank() && expectedApiKey.equals(provided)) {
+            chain.doFilter(req, res);
+        } else {
+            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
         }
-
-        if (!expected.equals(provided)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().write("Missing or invalid API Key");
-            return;
-        }
-
-        // ✅ Autenticar la petición para que pase .authenticated()
-        var auth = new UsernamePasswordAuthenticationToken(
-                "apiKeyUser", null, List.of(new SimpleGrantedAuthority("ROLE_API")));
-        SecurityContextHolder.getContext().setAuthentication(auth);
-
-        chain.doFilter(request, response);
     }
 }
