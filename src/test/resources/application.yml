@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  # No queremos arrancar contenedores por defecto en unit tests
+  testcontainers:
+    enabled: false
+
+  mail:
+    host: localhost
+    port: 1025
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+
+# Clave temporal para que CryptoService no explote en tests
+security:
+  crypto:
+    algorithm: AES/GCM/NoPadding
+    key-base64: "CNWtBuphxqhraNUkFrzzIU0dtMMoazglr/tD6iDXR24="
+    iv-length: 12
