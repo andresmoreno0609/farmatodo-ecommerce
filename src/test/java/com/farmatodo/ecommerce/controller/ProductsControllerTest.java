@@ -34,6 +34,9 @@ class ProductsControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @MockBean
+    private ProductAdapter adapter;
+
     private ProductResponse prod(long id) {
         return new ProductResponse(
                 id,
@@ -45,9 +48,6 @@ class ProductsControllerTest {
                 "ACTIVE"
         );
     }
-
-    @MockBean
-    private ProductAdapter adapter;
 
     @Test
     void create_shouldReturn201_withLocationAndBody() throws Exception {
@@ -86,14 +86,15 @@ class ProductsControllerTest {
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
     }
 
-
     @Test
     void get_shouldReturn200_withBody() throws Exception {
         when(adapter.get(5L)).thenReturn(prod(5L));
 
         mvc.perform(get("/api/v1/products/{id}", 5L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(5));
+                .andExpect(jsonPath("$.id").value(5))
+                .andExpect(jsonPath("$.sku").value("SKU-5"))
+                .andExpect(jsonPath("$.name").value("Product 5"));
     }
 
     @Test
@@ -108,7 +109,9 @@ class ProductsControllerTest {
         mvc.perform(get("/api/v1/products"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].sku").value("SKU-1"))
                 .andExpect(jsonPath("$.content[1].id").value(2))
+                .andExpect(jsonPath("$.content[1].sku").value("SKU-2"))
                 .andExpect(jsonPath("$.number").value(0))
                 .andExpect(jsonPath("$.size").value(20))
                 .andExpect(jsonPath("$.totalElements").value(2));
@@ -116,39 +119,38 @@ class ProductsControllerTest {
 
     @Test
     void update_shouldReturn200_withBody() throws Exception {
-        var req = new CreateProductRequest(
-                "Acetaminofén 500mg",
-                "Caja x 24",
-                "Prueba descripcion",
-                new BigDecimal("12.50"),
-                50,
-                2
+        var req = new UpdateProductRequest(
+                "Producto 7 actualizado",
+                "Desc",
+                new BigDecimal("21.00"),
+                99
         );
 
-        var created = new ProductResponse(
-                100L,
-                req.sku(),
+        var updated = new ProductResponse(
+                7L,
+                "SKU-7",
                 req.name(),
                 req.description(),
                 req.price(),
                 req.stock(),
                 "ACTIVE"
         );
+        when(adapter.update(eq(7L), any(UpdateProductRequest.class))).thenReturn(updated);
 
-        when(adapter.create(any(CreateProductRequest.class))).thenReturn(created);
-
-        mvc.perform(post("/api/v1/products")
+        mvc.perform(put("/api/v1/products/{id}", 7L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/v1/products/100"))
-                .andExpect(jsonPath("$.id").value(100))
-                .andExpect(jsonPath("$.sku").value("Acetaminofén 500mg"))
-                .andExpect(jsonPath("$.name").value("Caja x 24"))
-                .andExpect(jsonPath("$.description").value("Prueba descripcion"))
-                .andExpect(jsonPath("$.price").value(12.50))
-                .andExpect(jsonPath("$.stock").value(50))
+                //.andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(7))
+                .andExpect(jsonPath("$.sku").value("SKU-7"))
+                .andExpect(jsonPath("$.name").value("Producto 7 actualizado"))
+                .andExpect(jsonPath("$.description").value("Desc"))
+                .andExpect(jsonPath("$.price").value(21.00))
+                .andExpect(jsonPath("$.stock").value(99))
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
+
+        verify(adapter).update(eq(7L), any(UpdateProductRequest.class));
     }
 
     @Test
