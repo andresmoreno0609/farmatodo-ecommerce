@@ -1,0 +1,38 @@
+# Perfil para Cloud Run con H2 en memoria (demo del reto)
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:ecommerce;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    # Desactiva si tus scripts no están preparados para H2
+    enabled: false
+  h2:
+    console:
+      enabled: false  # No exponemos consola en prod por seguridad
+
+springdoc:
+  api-docs.enabled: true
+  api-docs.path: /v3/api-docs
+  swagger-ui.enabled: true
+  swagger-ui.path: /swagger-ui.html
+
+# Seguridad (clave por env var; si falta, usa este default)
+security:
+  apiKeyHeader: X-API-KEY
+  apiKey: ${SECURITY_API_KEY:changeme-123}
+
+# Logging básico
+logging:
+  level:
+    root: INFO
+    com.farmatodo: INFO
