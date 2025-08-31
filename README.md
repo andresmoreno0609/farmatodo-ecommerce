@@ -17,8 +17,8 @@ El sistema simula un flujo de e-commerce incluyendo **tokenización de tarjetas,
 - Java 17  
 - Spring Boot 3.5.5  
 - Spring Web, Data JPA, Validation, Security (API Key), Mail  
-- PostgreSQL (producción)  
-- H2 (pruebas/local)  
+- PostgreSQL (producción/local con Docker)  
+- H2 (pruebas / perfil cloud-h2 en producción demo)  
 - Docker & Docker Compose  
 - Swagger/OpenAPI 3 (documentación de APIs)  
 - Flyway (migraciones de BD)  
@@ -49,7 +49,7 @@ src/main/java/com/farmatodo/ecommerce
 ---
 
 ## ⚙️ Configuración
-Parámetros clave en `application.yml`:
+Parámetros clave en `application.yml` / perfiles:
 - `security.apiKey` → API Key requerida en los endpoints.  
 - `tokenization.rejectionProbability` → Probabilidad de rechazo en tokenización.  
 - `payments.approvalProbability` → Probabilidad de aprobación en pagos.  
@@ -57,7 +57,6 @@ Parámetros clave en `application.yml`:
 - `search.minStock` → Stock mínimo visible en búsquedas.  
 - `notifications.operatorEmail` → Correo de soporte para recibir copias de notificaciones.  
 - `crypto.keyB64` → Clave AES en Base64 (32 bytes).  
-
 
 ---
 
@@ -70,19 +69,39 @@ Parámetros clave en `application.yml`:
    - API → `http://localhost:8080/ping`
    - Swagger UI → `http://localhost:8080/swagger-ui.html`
 
----
-
-## 🐳 Docker
-Construcción y ejecución multi-stage:
+### Con Docker Compose
 ```bash
-docker build -t farmatodo-ecommerce .
-docker-compose up
+docker-compose up --build
 ```
 
-Servicios en `docker-compose.yml`:
-- **app** (Spring Boot)  
-- **postgres** (DB)  
-- **mailhog** (captura de correos)  
+Servicios:
+- **API**: http://localhost:8080  
+- **Ping**: http://localhost:8080/ping  
+- **Swagger**: http://localhost:8080/swagger-ui.html  
+- **Mailhog**: http://localhost:8025  
+
+---
+
+## 🌐 Producción (GCP - Cloud Run)
+El servicio está desplegado en **Google Cloud Run** con perfil `cloud-h2`:
+
+- **Base URL**:  
+  `https://ecommerce-service-866466265019.us-central1.run.app`
+
+- **Endpoints principales**:
+  - `GET /ping` → prueba de salud.  
+  - Swagger UI →  
+    [https://ecommerce-service-866466265019.us-central1.run.app/swagger-ui.html](https://ecommerce-service-866466265019.us-central1.run.app/swagger-ui.html)  
+  - OpenAPI docs →  
+    [https://ecommerce-service-866466265019.us-central1.run.app/v3/api-docs](https://ecommerce-service-866466265019.us-central1.run.app/v3/api-docs)  
+
+> ⚠️ Todos los endpoints (excepto `/ping`) requieren API Key en el header:  
+> `x-api-key: changeme-123`  
+
+Ejemplo:
+```bash
+curl -i -H "x-api-key: changeme-123"   https://ecommerce-service-866466265019.us-central1.run.app/customers
+```
 
 ---
 
@@ -91,13 +110,16 @@ Ejecutar pruebas unitarias con cobertura (JaCoCo ≥ 80%):
 ```bash
 mvn clean verify
 ```
----
-## Uso de AI
 
+Reporte de cobertura:  
+`target/site/jacoco/index.html`
+
+---
+
+## 🤖 Uso de AI
 Durante el desarrollo de este proyecto se utilizó inteligencia artificial como apoyo para resolver dudas y documentar procesos técnicos.  
 
 En particular, se solicitó ayuda para:  
-
 - Configuración y despliegue en Google Cloud con **Docker** y **Docker Compose**.  
 - Entendimiento y configuración de la base de datos **H2** (conceptos, funcionamiento, configuración en Spring Boot, acceso a consola, creación de tablas y uso en pruebas unitarias).  
 
@@ -109,7 +131,7 @@ En particular, se solicitó ayuda para:
 
 ## 📦 Entregables del reto
 - Código fuente en este repositorio.
-- API desplegada en Docker/GCP.
+- API desplegada en **Docker/GCP**.
 - Colección Postman para pruebas.
 - Diagramas de arquitectura.
 - Documentación en este README.
