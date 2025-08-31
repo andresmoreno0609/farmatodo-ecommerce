@@ -91,6 +91,13 @@ Ejecutar pruebas unitarias con cobertura (JaCoCo ≥ 80%):
 ```bash
 mvn clean verify
 ```
+---
+Uso de AI
+
+Durante el desarrollo de este proyecto se utilizó inteligencia artificial como apoyo para resolver dudas y documentar procesos técnicos.  
+En particular, se solicitó ayuda para la configuración y despliegue en **Google Cloud** con **Docker y Docker Compose**.  
+
+🔗 Conversación de referencia: [Implementación en Google Cloud con Docker](https://chatgpt.com/share/68b3b331-1548-8007-b41e-e1b485b22d7d)
 
 ---
 
