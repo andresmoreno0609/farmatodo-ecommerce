@@ -95,9 +95,15 @@ mvn clean verify
 ## Uso de AI
 
 Durante el desarrollo de este proyecto se utilizó inteligencia artificial como apoyo para resolver dudas y documentar procesos técnicos.  
-En particular, se solicitó ayuda para la configuración y despliegue en **Google Cloud** con **Docker y Docker Compose**.  
 
-🔗 Conversación de referencia: [Implementación en Google Cloud con Docker](https://chatgpt.com/share/68b3b331-1548-8007-b41e-e1b485b22d7d)
+En particular, se solicitó ayuda para:  
+
+- Configuración y despliegue en Google Cloud con **Docker** y **Docker Compose**.  
+- Entendimiento y configuración de la base de datos **H2** (conceptos, funcionamiento, configuración en Spring Boot, acceso a consola, creación de tablas y uso en pruebas unitarias).  
+
+📎 Conversaciones de referencia:  
+- [Implementación en Google Cloud con Docker](https://chatgpt.com/share/68b3b584-3dac-8007-b124-6d37b8e50644)  
+- [Guía completa de H2 Database](https://chatgpt.com/share/68b3b584-3dac-8007-b124-6d37b8e50644)  
 
 ---
 
