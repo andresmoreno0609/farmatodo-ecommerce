@@ -1,6 +1,5 @@
 package com.farmatodo.ecommerce.usecase;
 
-
 import com.farmatodo.ecommerce.config.propierties.PaymentsProperties;
 import com.farmatodo.ecommerce.entity.PaymentEntity;
 import com.farmatodo.ecommerce.enums.EPaymentStatus;
@@ -19,36 +18,41 @@ public class UCPaymentProcessor {
     private final UCOrder ucOrder;
     private final PaymentsProperties properties;
     private final UCEmail emailService;
-    private final Random rng = new Random();
+    private Random rng = new Random();
 
-    public UCPaymentProcessor(PaymentRepository paymentRepo, UCOrder ucOrder, PaymentsProperties properties, UCEmail emailService){
-        this.paymentRepo = paymentRepo; this.ucOrder = ucOrder; this.properties = properties;
+    public UCPaymentProcessor(PaymentRepository paymentRepo,
+                              UCOrder ucOrder,
+                              PaymentsProperties properties,
+                              UCEmail emailService) {
+        this.paymentRepo = paymentRepo;
+        this.ucOrder = ucOrder;
+        this.properties = properties;
         this.emailService = emailService;
     }
 
-    // corre cada X segundos, toma PENDING listos para reintento
-    @Scheduled(fixedDelayString = "#{${settings.payment-retry-delay-seconds:30}*1000}")
+    @Scheduled(fixedDelayString = "#{${payments.retry.cadenceSeconds:30}*1000}")
     @Transactional
-    public void tick(){
-        var before = OffsetDateTime.now().minusSeconds(properties.getRetry().getCadenceSeconds());
+    public void tick() {
+        var before = OffsetDateTime.now()
+                .minusSeconds(properties.getRetry().getCadenceSeconds());
         var pendings = paymentRepo.findByStatusAndLastTriedAtBefore(EPaymentStatus.PENDING, before);
-        for (var p : pendings){
+        for (var p : pendings) {
             attempt(p);
         }
     }
 
     @Transactional
-    public void attempt(PaymentEntity p){
+    public void attempt(PaymentEntity p) {
         p.setLastTriedAt(OffsetDateTime.now());
-        p.setAttempts(p.getAttempts()+1);
+        p.setAttempts(p.getAttempts() + 1);
 
         boolean approved = rng.nextDouble() < properties.getApprovalProbability();
-        if (approved){
+        if (approved) {
             p.setStatus(EPaymentStatus.APPROVED);
             p.setLastError(null);
             paymentRepo.save(p);
-            ucOrder.markPaid(p.getOrder());
 
+            ucOrder.markPaid(p.getOrder());
             emailService.sendPaymentSuccess(p.getOrder());
             return;
         }
@@ -57,12 +61,16 @@ public class UCPaymentProcessor {
         p.setLastError("gateway_declined");
         paymentRepo.save(p);
 
-        if (p.getAttempts() >= properties.getApprovalProbability()){
-
+        if (p.getAttempts() >= properties.getRetry().getMaxAttempts()) {
             p.setStatus(EPaymentStatus.FAILED);
             paymentRepo.save(p);
+
             ucOrder.markFailed(p.getOrder());
             emailService.sendPaymentFailed(p.getOrder(), p.getAttempts(), p.getLastError());
         }
+    }
+
+    void setRng(Random rng) {
+        this.rng = rng;
     }
 }
