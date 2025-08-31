@@ -1,7 +1,6 @@
-package com.farmatodo.ecommerce.usecase;
+package com.farmatodo.ecommerce.usecase.impl;
 
 import com.farmatodo.ecommerce.DTOs.Request.AddCartItemRequest;
-import com.farmatodo.ecommerce.DTOs.Request.AddToCartRequest;
 import com.farmatodo.ecommerce.DTOs.Response.CartResponse;
 import com.farmatodo.ecommerce.adapter.CartAdapter;
 import com.farmatodo.ecommerce.usecase.UCCart;

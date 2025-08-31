@@ -1,4 +1,4 @@
-package com.farmatodo.ecommerce.usecase;
+package com.farmatodo.ecommerce.usecase.impl;
 
 import com.farmatodo.ecommerce.entity.CustomerEntity;
 import com.farmatodo.ecommerce.enums.ERecordStatus;

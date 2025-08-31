@@ -1,10 +1,11 @@
-package com.farmatodo.ecommerce.usecase;
+package com.farmatodo.ecommerce.usecase.impl;
 
 
 import com.farmatodo.ecommerce.DTOs.Request.CreateOrderRequest;
 import com.farmatodo.ecommerce.DTOs.Response.OrderResponse;
 import com.farmatodo.ecommerce.adapter.OrderAdapter;
 import com.farmatodo.ecommerce.entity.OrderEntity;
+import com.farmatodo.ecommerce.usecase.UCOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 

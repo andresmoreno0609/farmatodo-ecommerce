@@ -5,6 +5,7 @@ import com.farmatodo.ecommerce.DTOs.Request.UpdateCustomerRequest;
 import com.farmatodo.ecommerce.DTOs.Response.CustomerResponse;
 import com.farmatodo.ecommerce.adapter.CustomerAdapter;
 import com.farmatodo.ecommerce.entity.CustomerEntity;
+import com.farmatodo.ecommerce.usecase.impl.CustomerImp;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
