@@ -1,50 +1,36 @@
 package com.farmatodo.ecommerce.config.swagger;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
-    @Value("${security.apiKey:changeme-dev}")
-    private String apiKey;
 
-    @Value("${security.apiKeyHeader:X-API-KEY}")
-    private String apiKeyHeader;
+    private final ApiKeyFilter apiKeyAuthFilter;
 
     @Bean
-    public ApiKeyFilter apiKeyFilter() {
-        return new ApiKeyFilter(apiKeyHeader, apiKey);
-    }
-
-    @Bean
-    SecurityFilterChain filterChain(HttpSecurity http,ApiKeyFilter apiKeyFilter) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
-                .headers(h -> h.frameOptions(f -> f.disable())) // para H2 console
-                .httpBasic(b -> b.disable())
-                .formLogin(f -> f.disable())
+                .csrf(csrf -> csrf.disable()) // APIs: sin CSRF
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(reg -> reg
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/ping",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/actuator/health",
-                                "/h2-console/**"
+                                "/swagger-ui.html", "/swagger-ui/**",
+                                "/v3/api-docs", "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }

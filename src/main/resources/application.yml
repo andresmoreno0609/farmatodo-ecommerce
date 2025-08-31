@@ -71,7 +71,7 @@ management:
 # Seguridad (API Key)
 security:
   apiKeyHeader: X-API-KEY
-  apiKey: ${SECURITY_API_KEY:changeme-dev}   # override en PROD
+  apiKey: ${SECURITY_API_KEY:changeme-dev}
 
 # CorrelationId
 correlation:
@@ -108,6 +108,7 @@ crypto:
 # Logging
 logging:
   level:
+    org.springframework.security: DEBUG
     root: INFO
     com.farmatodo: DEBUG
   pattern:
